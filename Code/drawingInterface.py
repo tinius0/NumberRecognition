@@ -1,6 +1,5 @@
 import cv2 as cv
 import numpy as np
-import tensorflow as tf
 import  pickle #Used to load the trained model
 
 # Load the trained model
