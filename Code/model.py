@@ -1,9 +1,15 @@
 import numpy as np
-import os
+import pickle #Used to save the trained model
 from keras.datasets import mnist
 
 mnistDataSet = mnist.load_data()
 
+#helper function to one-hot encode the labels
+def one_hot_encode(labels, num_classes):
+    num_labels = labels.shape[0]
+    one_hot = np.zeros((num_labels, num_classes))
+    one_hot[np.arange(num_labels), labels] = 1
+    return one_hot
 # Load the MNIST dataset from mnistDataSet variable
 def load_mnist_images():
     (x_train, _), (x_test, _) = mnistDataSet
@@ -65,19 +71,25 @@ def backward_propagatation(X, y_true, a1, output, W2):
     return dW1, db1, dW2, db2
 
 def train_model(X_train, y_train, X_test, y_test, input_size, hidden_size, output_size, epochs, learning_rate, batch_size):
+    y_train_one_hot = one_hot_encode(y_train, output_size)
+    y_test_one_hot = one_hot_encode(y_test, output_size)
+    
     #Initialize parameters
     W1,b1,W2,b2 = init_params(input_size, hidden_size, output_size)
 
     num_training_samples = X_train.shape[0]
 
+    print(f"Starting training with {num_training_samples} samples, {epochs} epochs, batch_size {batch_size}, learning_rate {learning_rate}")
+
     for epoch in range(epochs):
         permutation = np.random.permutation(num_training_samples)
         x_train_shuffled = X_train[permutation]
-        y_train_shuffled = y_train[permutation] #one-hot encode later
+        y_train_shuffled_one_hot = y_train_one_hot[permutation]
+
 
         for i in range(0, num_training_samples, batch_size):
             x_batch = x_train_shuffled[i:i + batch_size]
-            y_batch_true = y_train_shuffled[i:i + batch_size]
+            y_batch_true = y_train_shuffled_one_hot[i:i + batch_size]
 
             #Forward pass batches
             a1,output = forward_pass(x_batch,W1,b1,W2,b2)
@@ -90,13 +102,16 @@ def train_model(X_train, y_train, X_test, y_test, input_size, hidden_size, outpu
             W2 -= learning_rate * dW2
             b2 -= learning_rate * db2
 
-            if(epoch+1)% 10 == 0:
-                _, train_output = forward_pass(X_train, W1, b1, W2, b2)
-                train_loss = cross_entropy(y_train, train_output)
-                train_accuracy = np.mean(np.argmax(train_output, axis=1) == np.argmax(y_train, axis=1))    
+        _, train_output = forward_pass(X_train, W1, b1, W2, b2)
+        train_loss = cross_entropy(y_train_one_hot, train_output)
+        train_accuracy = np.mean(np.argmax(train_output, axis=1) == y_train)
 
-                _, test_output = forward_pass(X_test, W1, b1, W2, b2)
-                test_loss = cross_entropy(y_test, test_output)
-                test_accuracy = np.mean(np.argmax(test_output, axis=1) == np.argmax(y_test, axis=1))    
+        _, test_output = forward_pass(X_test, W1, b1, W2, b2)
+        test_loss = cross_entropy(y_test_one_hot, test_output)
+        test_accuracy = np.mean(np.argmax(test_output, axis=1) == y_test)
 
-                print(f"Epoch {epoch+1}, Batch {i//batch_size+1}, Train Loss: {train_loss:.4f}, Train Accuracy: {train_accuracy:.4f}, Test Loss: {test_loss:.4f}, Test Accuracy: {test_accuracy:.4f}")
+        print(f"Epoch {epoch+1}, Batch {i//batch_size+1}, Train Loss: {train_loss:.4f}, Train Accuracy: {train_accuracy:.4f}, Test Loss: {test_loss:.4f}, Test Accuracy: {test_accuracy:.4f}")
+        
+        # Save trained weights to file
+        with open("trained_model.pkl", "wb") as f:
+            pickle.dump((W1, b1, W2, b2), f)

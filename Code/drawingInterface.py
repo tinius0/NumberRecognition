@@ -1,9 +1,29 @@
 import cv2 as cv
 import numpy as np
 import tensorflow as tf
+import  pickle #Used to load the trained model
 
 # Load the trained model
-model = tf.keras.models.load_model('number_recognition.keras')
+with open("trained_model.pkl", "rb") as f:
+    W1, b1, W2, b2 = pickle.load(f)
+
+#Functions from model.py to perform forward pass and prediction
+import numpy as np
+
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
+
+def softmax(x):
+    exp_x = np.exp(x - np.max(x, axis=1, keepdims=True))
+    return exp_x / np.sum(exp_x, axis=1, keepdims=True)
+
+def forward_pass(X, W1, b1, W2, b2):
+    z1 = np.dot(X, W1) + b1
+    a1 = sigmoid(z1)
+    z2 = np.dot(a1, W2) + b2
+    output = softmax(z2)
+    return output
+
 
 #Drawing interface for number recognition using greyscale images
 img = np.zeros((280, 280), dtype=np.uint8)
@@ -63,7 +83,9 @@ while True:
         padded = padded.reshape(1, 28, 28)
 
         # Predict
-        pred = model.predict(padded)
-        digit = np.argmax(pred)
+        padded = padded.reshape(1, 28*28)
+        output = forward_pass(padded, W1, b1, W2, b2)
+        digit = np.argmax(output)
         prediction_text = str(digit)
+
 cv.destroyAllWindows()
