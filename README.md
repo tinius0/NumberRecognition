@@ -4,7 +4,7 @@ A neural network used to recognize numbers, trained on the MNIST dataset.
 This project includes a drawing interface that allows users to draw digits and see the model's predictions in real-time.
 Going from a solution using tensorflow frameworks (first commit) to a manually implemented neural network. The project magnifies the normal 28x28 template used which MNIST to better the user expirience. Minimizes it and feeds it into the AI model to make a prediction.  
 The accuracy when using tensorflow was about 97% (4 epochs, v0) on the MNIST dataset  
-The accuracy when using my implementation 95% (4 epochs) and  on the MNIST dataset  
+The accuracy when using my implementation 91% (4 epochs) and  on the MNIST dataset  
 
 Remain under 30 epochs to avoid overfitting if testing yourself
 
