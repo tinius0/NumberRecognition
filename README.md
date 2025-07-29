@@ -2,6 +2,8 @@
 
 A neural network used to recognize numbers, trained on the MNIST dataset. 
 This project includes a drawing interface that allows users to draw digits and see the model's predictions in real-time.
+Going from a solution using tensorflow frameworks to a manually implemented network. The accuracy when using tensorflow was about 97% (4 epochs, v0).
+The accuracy of the latest neural network is: 
 
 ## Features
 
