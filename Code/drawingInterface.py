@@ -8,8 +8,6 @@ with open("ParametersAndTrainingData/trained_model.pkl", "rb") as f:
     W1, b1, W2, b2,W3,b3 = pickle.load(f)
 
 #Functions from model.py to perform forward pass and prediction
-import numpy as np
-
 def relu(x):
     return np.maximum(0,x)
 
@@ -18,16 +16,11 @@ def softmax(x):
     return exp_x / np.sum(exp_x, axis=1, keepdims=True)
 
 def forward_pass(X,W1,b1,W2,b2,W3,b3):
-    z1 = np.dot(X,W1)+ b1 
-    a1 = relu(z1) #Compress the matrix multiplication result to a value between 0 and 1
+    h1 = relu(np.dot(X, W1) + b1)
+    h2 = relu(np.dot(h1, W2) + b2)
+    out = np.dot(h2, W3) + b3  
 
-    z2 = np.dot(a1,W2) + b2
-    a2 = relu(z2)
-
-    z3 = np.dot(a2,W3) +b3
-    output = softmax(z3)
-    return z1,a1,z2,a2,z3, output
-
+    return np.argmax(out, axis=1)[0]
 
 #Drawing interface for number recognition using greyscale images
 img = np.zeros((280, 280), dtype=np.uint8)
@@ -84,12 +77,11 @@ while True:
             padded = resized_img
 
         padded = padded.astype(np.float32) / 255.0
-        padded = padded.reshape(1, 28, 28)
+        padded = padded.reshape(1, 28 * 28)
 
         # Predict
-        padded = padded.reshape(1, 28*28)
         output = forward_pass(padded, W1, b1, W2, b2,W3,b3)
-        digit = np.argmax(output)
-        prediction_text = str(digit)
+        #digit = np.argmax(output)
+        prediction_text = str(output)
 
 cv.destroyAllWindows()
