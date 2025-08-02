@@ -1,6 +1,5 @@
 # File: main.py
 
-import numpy as np
 import model
 import trainModel
 if __name__ == "__main__":
