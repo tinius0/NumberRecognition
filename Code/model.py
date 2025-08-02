@@ -1,5 +1,4 @@
 import numpy as np
-import pickle #Used to save the trained model
 from keras.datasets import mnist
 
 mnistDataSet = mnist.load_data()
@@ -22,14 +21,14 @@ def load_mnist_labels():
     #Remember to one-hot encode the labels
     return y_train, y_test
 
-def init_params(input_size, hidden_size, output_size):
+def init_params(input_size, hidden_size,hidden2_size, output_size):
     W1 = np.random.randn(input_size, hidden_size) * 0.01 
     b1 = np.zeros((1, hidden_size)) 
 
-    W2 = np.random.randn(hidden_size, output_size) * 0.01  
-    b2 = np.zeros((1, output_size))
+    W2 = np.random.randn(hidden_size, hidden2_size) * 0.01  
+    b2 = np.zeros((1, hidden2_size))
 
-    W3 = np.random.randn(hidden_size, output_size) *0.01
+    W3 = np.random.randn(hidden2_size, output_size) *0.01
     b3 = np.zeros((1, output_size))
 
     return W1, b1, W2, b2,W3, b3
@@ -37,17 +36,21 @@ def init_params(input_size, hidden_size, output_size):
 #RELU activation function
 def relu(x):
     return np.maximum(0,x)
+def relu_derivative(x):
+    return (x > 0).astype(float)
+
 
 #Forward pass finding the output from previous layer and input for the next layer
 def forward_pass(X,W1,b1,W2,b2,W3,b3):
     z1 = np.dot(X,W1)+ b1 
     a1 = relu(z1) #Compress the matrix multiplication result to a value between 0 and 1
+
     z2 = np.dot(a1,W2) + b2
     a2 = relu(z2)
-    z3 = np.dot(a2,W3) +b3
 
+    z3 = np.dot(a2,W3) +b3
     output = softmax(z3)
-    return a1,a2, output
+    return z1,a1,z2,a2,z3, output
 
 #Output layer activation function
 def softmax(x):
@@ -62,20 +65,20 @@ def cross_entropy(y_true, y_pred):
     return loss
 
 # Backward propagation to update the weights and biases
-def backward_propagatation(X, y_true, a1,a2, output, W2,W3):
+def backward_propagatation(X, y_true, z1, a1, z2, a2, z3, output, W2, W3):
     m = X.shape[0]
-    delta3= output - y_true
-    dW3 = np.dot(a2.T, delta3)
+
+    delta3 = output - y_true
+    dW3 = np.dot(a2.T, delta3) / m
     db3 = np.sum(delta3, axis=0, keepdims=True) / m
 
-    delta2 = np.dot(delta3, W3.T)*(a2 * (1 - a2))
+    delta2 = np.dot(delta3, W3.T) * relu_derivative(z2)
     dW2 = np.dot(a1.T, delta2) / m
     db2 = np.sum(delta2, axis=0, keepdims=True) / m
 
-    delta1 = np.dot(delta2, W2.T) * (a1 * (1 - a1)) 
+    delta1 = np.dot(delta2, W2.T) * relu_derivative(z1)
     dW1 = np.dot(X.T, delta1) / m
     db1 = np.sum(delta1, axis=0, keepdims=True) / m
 
     return dW1, db1, dW2, db2, dW3, db3
-
 
